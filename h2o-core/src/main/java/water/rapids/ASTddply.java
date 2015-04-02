@@ -24,10 +24,11 @@ public class ASTddply extends ASTOp {
   static final String VARS[] = new String[]{ "ary", "{cols}", "FUN"};
   public ASTddply( ) { super(VARS); }
 
-  @Override String opStr(){ return "h2o.ddply";}
-  @Override ASTOp make() {return new ASTddply();}
+  @Override protected String opStr(){ return "h2o.ddply";}
+  @Override protected ASTOp make() {return new ASTddply();}
 
-  @Override ASTddply parse_impl(Exec E) {
+  @Override
+  protected ASTddply parse_impl(Exec E) {
     // get the frame to work
     AST ary = E.parse();
     if (ary instanceof ASTId) ary = Env.staticLookup((ASTId)ary);
@@ -69,7 +70,7 @@ public class ASTddply extends ASTOp {
     return res;
   }
 
-  @Override void apply(Env env) {
+  @Override protected void apply(Env env) {
     Frame fr = env.popAry();    // The Frame to work on
 
     // sanity check cols some moar

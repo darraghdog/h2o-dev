@@ -53,7 +53,8 @@ public class ASTFunc extends ASTFuncDef {
   AST[] _args;
 
   // (name args)
-  @Override ASTFunc parse_impl(Exec E) {
+  @Override
+  protected ASTFunc parse_impl(Exec E) {
     int nargs = _arg_names.length;
     AST[] args = new AST[nargs];
     for (int i = 0; i < nargs; ++i) {
@@ -67,11 +68,11 @@ public class ASTFunc extends ASTFuncDef {
     return res;
   }
 
-  @Override String opStr() { return _name; }
+  @Override protected String opStr() { return _name; }
 
-  @Override ASTOp make() { return new ASTFunc(); }
+  @Override protected ASTOp make() { return new ASTFunc(); }
 
-  @Override void apply(Env e) {
+  @Override protected void apply(Env e) {
     Frame cleanme;
     Frame f;
     Env captured = e.capture();
@@ -203,9 +204,9 @@ class ASTFuncDef extends ASTOp {
     putUDF(res, name);  // not all nodes get this...
   }
 
-  @Override String opStr() { return "def"; }
+  @Override protected String opStr() { return "def"; }
 
-  @Override ASTOp make() { return new ASTFuncDef(); }
+  @Override protected ASTOp make() { return new ASTFuncDef(); }
 
-  @Override void apply(Env e) { throw H2O.fail(); }
+  @Override protected void apply(Env e) { throw H2O.fail(); }
 }

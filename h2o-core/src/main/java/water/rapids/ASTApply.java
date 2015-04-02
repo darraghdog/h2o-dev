@@ -16,9 +16,10 @@ public class ASTApply extends ASTOp {
   protected static AST[] _fun_args;
   static final String VARS[] = new String[]{ "", "ary", "MARGIN", "FUN", "..."};
   public ASTApply( ) { super(VARS); }
-  @Override String opStr(){ return "apply";}
-  @Override ASTOp make() {return new ASTApply();}
-  @Override ASTApply parse_impl(Exec E) {
+  @Override protected String opStr(){ return "apply";}
+  @Override protected ASTOp make() {return new ASTApply();}
+  @Override
+  protected ASTApply parse_impl(Exec E) {
     AST ary = E.parse();
     if (ary instanceof ASTId) ary = Env.staticLookup((ASTId)ary);
     try {
@@ -40,7 +41,7 @@ public class ASTApply extends ASTOp {
     }
     return res;
   }
-  @Override void apply(Env env) {
+  @Override protected void apply(Env env) {
     String err="Result of function produced more than a single column!";
     // Peek everything from the stack
     final ASTOp op = ASTOp.get(_fun);
@@ -139,9 +140,10 @@ public class ASTApply extends ASTOp {
 class ASTSApply extends ASTApply {
 //  static final String VARS[] = new String[]{ "", "ary", "fcn", "..."};
   public ASTSApply( ) { super(); }
-  @Override String opStr(){ return "sapply";}
-  @Override ASTOp make() {return new ASTSApply();}
-  @Override ASTSApply parse_impl(Exec E) {
+  @Override protected String opStr(){ return "sapply";}
+  @Override protected ASTOp make() {return new ASTSApply();}
+  @Override
+  protected ASTSApply parse_impl(Exec E) {
     AST ary = E.parse();
     if (ary instanceof ASTId) ary = Env.staticLookup((ASTId)ary);
     _margin = 2;
@@ -155,7 +157,7 @@ class ASTSApply extends ASTApply {
     if (fun_args.size() > 0) _fun_args = fun_args.toArray(new AST[fun_args.size()]);
     return res;
   }
-  @Override void apply(Env env) {
+  @Override protected void apply(Env env) {
     super.apply(env);
   }
 }
@@ -167,9 +169,9 @@ class ASTSApply extends ASTApply {
 //class ASTUnique extends ASTddply {
 //  static final String VARS[] = new String[]{ "", "ary"};
 //  ASTUnique( ) { super(VARS, new Type[]{Type.ARY, Type.ARY}); }
-//  @Override String opStr(){ return "unique";}
-//  @Override ASTOp make() {return new ASTUnique();}
-//  @Override void apply(Env env, int argcnt, ASTApply apply) {
+//  @Override protected String opStr(){ return "unique";}
+//  @Override protected ASTOp make() {return new ASTUnique();}
+//  @Override protected void apply(Env env, int argcnt, ASTApply apply) {
 //    Thread cThr = Thread.currentThread();
 //    Frame fr = env.peekAry();
 //    int cols[] = new int[fr.numCols()];

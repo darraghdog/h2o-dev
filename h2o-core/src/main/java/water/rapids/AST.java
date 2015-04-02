@@ -17,7 +17,7 @@ import java.util.Arrays;
 abstract public class AST extends Iced {
   String[] _arg_names;
   AST[] _asts;
-  AST parse_impl(Exec e) { throw H2O.fail("Missing parse_impl for "+this.getClass()); }
+  protected AST parse_impl(Exec e) { throw H2O.fail("Missing parse_impl for "+this.getClass()); }
   abstract void exec(Env e);
   abstract String value();
   abstract int type();
@@ -137,7 +137,7 @@ class ASTId extends AST {
   final String _id;
   final char _type; // either '$' or '!' or '&'
   ASTId(char type, String id) { _type = type; _id = id; }
-  ASTId parse_impl(Exec E) {
+  protected ASTId parse_impl(Exec E) {
     String id = E.isQuoted(E.peek()) ? E.parseString(E.getQuote()) : E.parseID(); // allows for quoted ID here...
     return new ASTId(_type, id);
   }
@@ -154,7 +154,7 @@ class ASTId extends AST {
 class ASTKey extends AST {
   final String _key;
   ASTKey(String key) { _key = key; }
-  ASTKey parse_impl(Exec E) {
+  protected ASTKey parse_impl(Exec E) {
     if (!E.hasNext()) throw new IllegalArgumentException("End of input unexpected. Badly formed AST.");
     return new ASTKey(E.parseID());
   }
@@ -196,7 +196,7 @@ class ASTFrame extends AST {
 class ASTNum extends AST {
   final double _d;
   ASTNum(double d) { _d = d; }
-  ASTNum parse_impl(Exec E) {
+  protected ASTNum parse_impl(Exec E) {
     try {
       return new ASTNum(Double.valueOf(E.parseID()));
     } catch (NumberFormatException e) {
@@ -224,7 +224,7 @@ class ASTSpan extends AST {
   ASTSpan(long min, long max) { _ast_min = new ASTNum(min); _ast_max = new ASTNum(max); _min = min; _max = max;
     if (_min > _max) throw new IllegalArgumentException("min > max for `:` operator.");
   }
-  ASTSpan parse_impl(Exec E) {
+  protected ASTSpan parse_impl(Exec E) {
     AST l = E.parse();
     AST r = E.skipWS().parse();
     return new ASTSpan((ASTNum)l, (ASTNum)r);
@@ -273,7 +273,7 @@ class ASTSeries extends AST {
     _spans = spans;
   }
 
-  ASTSeries parse_impl(Exec E) {
+  protected ASTSeries parse_impl(Exec E) {
     ArrayList<Long> l_idxs = new ArrayList<>();
     ArrayList<ASTSpan> s_spans = new ArrayList<>();
     if (!E.hasNext()) throw new IllegalArgumentException("End of input unexpected. Badly formed AST.");
@@ -409,7 +409,8 @@ class ASTSeries extends AST {
 class ASTStatement extends AST {
 
   // must parse all statements: {(ast);(ast);(ast);...;(ast)}
-  @Override ASTStatement parse_impl( Exec E ) {
+  @Override
+  protected ASTStatement parse_impl(Exec E) {
     ArrayList<AST> ast_ary = new ArrayList<AST>();
 
     // an ASTStatement is an array of ASTs. May have ASTStatements within ASTStatements.
@@ -452,7 +453,8 @@ class ASTReturn extends ASTStatement {
   protected AST _stmnt;
   ASTReturn() {}
 
-  @Override ASTReturn parse_impl(Exec E) {
+  @Override
+  protected ASTReturn parse_impl(Exec E) {
     if (!E.hasNext()) throw new IllegalArgumentException("End of input unexpected. Badly formed AST.");
     AST stmnt = E.skipWS().parse();
     ASTReturn res = (ASTReturn) clone();
@@ -471,7 +473,8 @@ class ASTIf extends ASTStatement {
   ASTIf() {}
 
   // (if pred body)
-  @Override ASTIf parse_impl(Exec E) {
+  @Override
+  protected ASTIf parse_impl(Exec E) {
     // parse the predicate
     if (!E.hasNext()) throw new IllegalArgumentException("End of input unexpected. Badly formed AST.");
     AST pred = E.parse();
@@ -503,7 +506,8 @@ class ASTIf extends ASTStatement {
 class ASTElse extends ASTStatement {
   // (else body)
   ASTElse() {}
-  @Override ASTElse parse_impl(Exec E) {
+  @Override
+  protected ASTElse parse_impl(Exec E) {
     if (!E.hasNext()) throw new IllegalArgumentException("End of input unexpected. Badly formed AST.");
     ASTStatement statements = super.parse_impl(E.skipWS());
     ASTElse res = (ASTElse)clone();
@@ -521,7 +525,8 @@ class ASTFor extends ASTStatement {
 //  protected Object[] confusion_matrix;
 
   // (for #start #end body)
-  @Override ASTFor parse_impl(Exec E) {
+  @Override
+  protected ASTFor parse_impl(Exec E) {
     if (!E.hasNext()) throw new IllegalArgumentException("End of input unexpected. Badly formed AST.");
     int s = (int)((ASTNum)E.skipWS().parse())._d;
     if (!E.hasNext()) throw new IllegalArgumentException("End of input unexpected. Badly formed AST.");
@@ -544,7 +549,7 @@ class ASTWhile extends ASTStatement {
 
   // (while pred body)
   @Override
-  ASTWhile parse_impl(Exec E) {
+  protected ASTWhile parse_impl(Exec E) {
     throw H2O.unimpl("while loops are not supported.");
   }
 }
@@ -580,7 +585,7 @@ class ASTString extends AST {
   final String _s;
   final char _eq;
   ASTString(char eq, String s) { _eq = eq; _s = s; }
-  AST parse_impl(Exec E) {
+  protected AST parse_impl(Exec E) {
     if (!E.hasNext()) throw new IllegalArgumentException("End of input unexpected. Badly formed AST.");
     ASTString as = new ASTString(_eq, E.parseString(_eq));
     return Env.staticLookup(as);
@@ -622,7 +627,7 @@ class ASTNull extends AST {
  *       If the vec is numeric, then the RHS must also be numeric (if enum, then produce NAs or throw IAE).
  */
 class ASTAssign extends AST {
-  ASTAssign parse_impl(Exec E) {
+  protected ASTAssign parse_impl(Exec E) {
     E.skipWS();
     AST l;
     if (E.isSpecial(E.peek())) {
@@ -1033,7 +1038,7 @@ class ASTAssign extends AST {
 class ASTSlice extends AST {
   ASTSlice() {}
 
-  ASTSlice parse_impl(Exec E) {
+  protected ASTSlice parse_impl(Exec E) {
     AST hex = E.parse();
     AST rows = E.skipWS().parse();
     if (rows instanceof ASTString) rows = new ASTNull();
@@ -1226,7 +1231,7 @@ class ASTSlice extends AST {
 
 //-----------------------------------------------------------------------------
 class ASTDelete extends AST {
-  ASTDelete parse_impl(Exec E) {
+  protected ASTDelete parse_impl(Exec E) {
     AST ary = E.parse();
     AST cols = E.skipWS().parse();
     ASTDelete res = (ASTDelete) clone();

@@ -52,9 +52,9 @@ import java.util.concurrent.atomic.AtomicInteger;
   private long[] _gbCols; // group by columns
   private AGG[] _agg;
   ASTGroupBy() { super(null); }
-  @Override String opStr() { return "GB"; }
-  @Override ASTOp make() {return new ASTGroupBy();}
-  ASTGroupBy parse_impl(Exec E) {
+  @Override protected String opStr() { return "GB"; }
+  @Override protected ASTOp make() {return new ASTGroupBy();}
+  protected ASTGroupBy parse_impl(Exec E) {
     AST ary = E.parse();
     if( ary instanceof ASTId ) ary = Env.staticLookup((ASTId)ary);
 
@@ -81,7 +81,7 @@ import java.util.concurrent.atomic.AtomicInteger;
     res._asts = new AST[]{ary};
     return res;
   }
-  @Override void apply(Env e) {
+  @Override protected void apply(Env e) {
     // only allow reductions on time and numeric columns
     Frame fr = e.popAry();
 
@@ -475,7 +475,7 @@ import java.util.concurrent.atomic.AtomicInteger;
   static class AGG extends AST {
     // (AGG #N "agg" #col "na"  "agg" #col "na"   => string num string   string num string
     private AGG[] _aggs;
-    AGG parse_impl(Exec E) {
+    protected AGG parse_impl(Exec E) {
       int n = (int)((ASTNum)(E.parse()))._d; E.skipWS();
       _aggs=new AGG[n];
       for( int i=0;i<n;++i) {

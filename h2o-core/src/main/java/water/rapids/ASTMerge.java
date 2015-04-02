@@ -22,10 +22,11 @@ public class ASTMerge extends ASTOp {
 
   boolean _allLeft, _allRite;
   public ASTMerge( ) { super(VARS); }
-  @Override String opStr(){ return "merge";}
-  @Override ASTOp make() {return new ASTMerge();}
+  @Override protected String opStr(){ return "merge";}
+  @Override protected ASTOp make() {return new ASTMerge();}
 
-  @Override ASTMerge parse_impl(Exec E) {
+  @Override
+  protected ASTMerge parse_impl(Exec E) {
     // get the frames to work with
     AST left = E.parse();  if (left instanceof ASTId) left = Env.staticLookup((ASTId)left);
     AST rite = E.parse();  if (rite instanceof ASTId) rite = Env.staticLookup((ASTId)rite);
@@ -55,7 +56,7 @@ public class ASTMerge extends ASTOp {
     throw H2O.fail();
   }
 
-  @Override void apply(Env env) {
+  @Override protected void apply(Env env) {
     Frame l = env.popAry();
     Frame r = env.popAry();
 
